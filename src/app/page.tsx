@@ -1,18 +1,17 @@
-"use client";
-
+import { auth } from "@/auth";
 import { Button } from "@/components/ui/button";
-import { signIn } from "next-auth/react";
+import { redirect } from "next/navigation";
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth();
+
+  if (!session) {
+    redirect("/auth");
+  }
+
   return (
     <div>
-      <Button
-        onClick={() => {
-          signIn();
-        }}
-      >
-        demo
-      </Button>
+      <Button>demo</Button>
     </div>
   );
 }
