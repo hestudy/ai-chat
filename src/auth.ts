@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import credentials from "next-auth/providers/credentials";
+import { tryit } from "radash";
+import { db } from "./db";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
@@ -9,10 +11,14 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: {},
       },
       authorize: async (credentials) => {
-        return {
-          id: "1",
-          name: "test",
-        };
+        const user = await db.getInstance().prisma.user.findFirst({
+          where: {
+            email: credentials.email as string,
+          },
+        });
+        if (user) {
+        }
+        return null;
       },
     }),
   ],
