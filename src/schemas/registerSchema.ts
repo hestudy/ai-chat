@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const registerSchema = z.object({
-  name: z.string().min(1, { message: "用户名不能为空" }),
+  username: z.string().min(1, { message: "用户名不能为空" }),
   email: z
     .string()
     .min(1, { message: "邮箱不能为空" })

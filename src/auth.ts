@@ -1,25 +1,74 @@
-import NextAuth from "next-auth";
-import credentials from "next-auth/providers/credentials";
-import { tryit } from "radash";
+import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
+import { Lucia, User } from "lucia";
 import { db } from "./db";
+import { Session } from "lucia";
+import { cookies } from "next/headers";
+// @ts-ignore
+import { cache } from "react";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
-  providers: [
-    credentials({
-      credentials: {
-        email: {},
-        password: {},
-      },
-      authorize: async (credentials) => {
-        const user = await db.getInstance().prisma.user.findFirst({
-          where: {
-            email: credentials.email as string,
-          },
-        });
-        if (user) {
-        }
-        return null;
-      },
-    }),
-  ],
+const adapter = new PrismaAdapter(db.session, db.user);
+
+export const lucia = new Lucia(adapter, {
+  sessionCookie: {
+    expires: false,
+    attributes: {
+      secure: Boolean(process.env.AUTH_SECURE),
+    },
+  },
+  getUserAttributes: (attributes) => {
+    return {
+      // attributes has the type of DatabaseUserAttributes
+      username: attributes.username,
+      email: attributes.email,
+    };
+  },
 });
+
+export const validateRequest = cache(
+  async (): Promise<
+    { user: User; session: Session } | { user: null; session: null }
+  > => {
+    const sessionId = cookies().get(lucia.sessionCookieName)?.value ?? null;
+    if (!sessionId) {
+      return {
+        user: null,
+        session: null,
+      };
+    }
+
+    const result = await lucia.validateSession(sessionId);
+    // next.js throws when you attempt to set cookie when rendering page
+    try {
+      if (result.session && result.session.fresh) {
+        const sessionCookie = lucia.createSessionCookie(result.session.id);
+        cookies().set(
+          sessionCookie.name,
+          sessionCookie.value,
+          sessionCookie.attributes
+        );
+      }
+      if (!result.session) {
+        const sessionCookie = lucia.createBlankSessionCookie();
+        cookies().set(
+          sessionCookie.name,
+          sessionCookie.value,
+          sessionCookie.attributes
+        );
+      }
+    } catch {}
+    return result;
+  }
+);
+
+declare module "lucia" {
+  interface Register {
+    Lucia: typeof lucia;
+    DatabaseUserAttributes: DatabaseUserAttributes;
+  }
+}
+
+interface DatabaseUserAttributes {
+  username: string;
+  email: string;
+  id: string;
+}

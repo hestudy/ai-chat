@@ -1,36 +1,71 @@
 "use server";
 
+import { lucia } from "@/auth";
 import { db } from "@/db";
 import { RegisterData, registerSchema } from "@/schemas/registerSchema";
-import bcrypt from "bcrypt";
-import { tryit } from "radash";
+import { hash } from "@node-rs/argon2";
+import { generateIdFromEntropySize } from "lucia";
+import { cookies } from "next/headers";
 
-export async function register(data: RegisterData) {
+export const register = async (data: RegisterData) => {
   "use server";
-  const validate = registerSchema.safeParse(data);
+
+  const validate = await registerSchema.safeParseAsync(data);
   if (!validate.success) {
-    return validate;
-  }
-  if (validate.data.password !== validate.data.confirmPassword) {
-    return { success: false, error: "两次密码不一致" };
+    return {
+      success: false,
+      error: validate.error.errors?.[0]?.message,
+    };
   }
 
-  const { confirmPassword, ...props } = validate.data;
-  const [err, user] = await tryit(db.getInstance().prisma.user.create)({
-    data: {
-      ...props,
-      password: await bcrypt.hash(validate.data.password, 10),
+  if (validate.data.password !== validate.data.confirmPassword) {
+    return {
+      success: false,
+      error: "两次密码不一致",
+    };
+  }
+
+  const findUser = await db.user.findUnique({
+    where: {
+      email: validate.data.email,
     },
   });
-
-  if (err) {
-    return { success: false, error: "注册失败，邮箱可能已经被注册" };
+  if (findUser) {
+    return {
+      success: false,
+      error: "邮箱已被注册",
+    };
   }
 
+  const passwordHash = await hash(validate.data.password, {
+    // recommended minimum parameters
+    memoryCost: 19456,
+    timeCost: 2,
+    outputLen: 32,
+    parallelism: 1,
+  });
+  const userId = generateIdFromEntropySize(10);
+  const user = await db.user.create({
+    data: {
+      id: userId,
+      username: validate.data.username,
+      password_hash: passwordHash,
+      email: validate.data.email,
+    },
+  });
+  const session = await lucia.createSession(userId, {});
+  const sessionCookie = lucia.createSessionCookie(session.id);
+  cookies().set(
+    sessionCookie.name,
+    sessionCookie.value,
+    sessionCookie.attributes
+  );
   return {
     success: true,
     data: {
-      id: user?.id,
+      id: user.id,
+      username: user.username,
+      email: user.email,
     },
   };
-}
+};

@@ -1,6 +1,6 @@
 import { PrismaClient } from "@prisma/client";
 
-export const db = (() => {
+const instance = (() => {
   let instance: ReturnType<typeof createInstance> | null = null;
 
   function createInstance() {
@@ -19,3 +19,5 @@ export const db = (() => {
     },
   };
 })();
+
+export const db = instance.getInstance().prisma;

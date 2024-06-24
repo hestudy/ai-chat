@@ -24,7 +24,7 @@ import { RegisterData, registerSchema } from "@/schemas/registerSchema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRequest } from "ahooks";
 import Link from "next/link";
-import { redirect, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 
@@ -33,7 +33,7 @@ const page = () => {
   const form = useForm<RegisterData>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
-      name: "",
+      username: "",
       email: "",
       password: "",
       confirmPassword: "",
@@ -46,8 +46,8 @@ const page = () => {
       if (await form.trigger()) {
         const res = await register(form.getValues());
         if (res.success) {
-          toast.success("注册成功，请登录");
-          router.replace("/auth/login");
+          toast.success("注册成功");
+          router.replace("/");
         } else {
           toast.error(res.error?.toString() || "注册失败");
         }
@@ -77,7 +77,7 @@ const page = () => {
           <Form {...form}>
             <FormField
               control={form.control}
-              name="name"
+              name="username"
               render={({ field }) => {
                 return (
                   <FormItem>
