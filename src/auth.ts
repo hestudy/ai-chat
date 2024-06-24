@@ -3,7 +3,6 @@ import { Lucia, User } from "lucia";
 import { db } from "./db";
 import { Session } from "lucia";
 import { cookies } from "next/headers";
-// @ts-ignore
 import { cache } from "react";
 
 const adapter = new PrismaAdapter(db.session, db.user);

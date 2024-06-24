@@ -89,7 +89,15 @@ const page = () => {
                   <FormItem>
                     <FormLabel>密码</FormLabel>
                     <FormControl>
-                      <Input {...field} type="password"></Input>
+                      <Input
+                        {...field}
+                        type="password"
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            run();
+                          }
+                        }}
+                      ></Input>
                     </FormControl>
                     <FormMessage></FormMessage>
                   </FormItem>
