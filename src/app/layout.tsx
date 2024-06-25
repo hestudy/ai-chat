@@ -3,7 +3,6 @@ import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
 import "./globals.css";
-import { AI } from "@/actions/chat";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -21,18 +20,16 @@ export default async function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <AI>
-      <html lang="en">
-        <body
-          className={cn(
-            "h-screen bg-background font-sans antialiased",
-            fontSans.variable
-          )}
-        >
-          <Toaster />
-          {children}
-        </body>
-      </html>
-    </AI>
+    <html lang="en">
+      <body
+        className={cn(
+          "h-screen bg-background font-sans antialiased",
+          fontSans.variable
+        )}
+      >
+        <Toaster />
+        {children}
+      </body>
+    </html>
   );
 }

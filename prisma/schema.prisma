@@ -13,6 +13,7 @@ model User {
   email String   @unique
   username String 
   password_hash String
+  messages Message[]
 }
 
 model Session {
@@ -21,4 +22,14 @@ model Session {
   expiresAt DateTime
 
   user      User     @relation(references: [id], fields: [userId], onDelete: Cascade)
+}
+
+model Message {
+  id        String   @id
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id])
 }

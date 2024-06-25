@@ -1,42 +1,26 @@
 "use server";
 
+import { tools } from "@/tools";
 import { createOpenAI } from "@ai-sdk/openai";
 import { CoreMessage, streamText } from "ai";
-import { createAI, createStreamableValue, getAIState, streamUI } from "ai/rsc";
+import { createStreamableValue } from "ai/rsc";
 
 const openai = createOpenAI({
   apiKey: process.env.OPENAI_API_KEY,
   baseURL: process.env.OPENAI_API_BASE_URL,
 });
 
-export const chat = async (message: string) => {
+export const chat = async (messages: CoreMessage[]) => {
   "use server";
 
-  const hidtory = getAIState();
-
-  const content = createStreamableValue();
-
-  const { textStream } = await streamText({
+  const result = await streamText({
     model: openai("gpt-3.5-turbo"),
     system: "你是一位友好的机器人助手",
-    prompt: "你将充满善意的回答每一个问题",
+    messages,
+    tools,
   });
-  let text = "";
-  for await (const textPart of textStream) {
-    text += textPart;
-    content.update(text);
-  }
-  content.done();
 
-  return {
-    content: content.value,
-  };
+  const streamed = createStreamableValue(result.fullStream);
+
+  return { content: streamed.value };
 };
-
-export const AI = createAI({
-  initialAIState: [],
-  initialUIState: [],
-  actions: {
-    chat,
-  },
-});
