@@ -1,24 +1,45 @@
 "use client";
 
 import { chat } from "@/actions/chat";
+import { getMessage, saveMessage } from "@/actions/message";
+import MessageDirection from "@/components/MessageDirection";
+import MessageItem from "@/components/MessageItem";
 import GridPattern from "@/components/ui/magicui/animated-grid-pattern";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
+import { useDebounceFn, useRequest } from "ahooks";
 import { CoreMessage } from "ai";
 import { readStreamableValue } from "ai/rsc";
 import { nanoid } from "nanoid";
-import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { isArray } from "radash";
+import { useState } from "react";
 
 const page = () => {
   const [input, setInput] = useState<string>();
   const [messages, setMessages] = useState<(CoreMessage & { id: string })[]>(
     []
   );
+  const { id } = useParams();
 
-  useEffect(() => {
-    console.log(messages);
-  }, [messages]);
+  useRequest(async () => {
+    const res = await getMessage({ id: id as string });
+    if (res.data?.content) {
+      setMessages(JSON.parse(res.data.content));
+    }
+  });
+
+  const { run: save } = useDebounceFn(
+    () => {
+      saveMessage({
+        id: id as string,
+        content: JSON.stringify(messages),
+      });
+    },
+    {
+      wait: 300,
+    }
+  );
 
   return (
     <div className="h-full mx-auto relative">
@@ -26,28 +47,14 @@ const page = () => {
       <div className="absolute z-2 w-full h-full">
         <div className="mx-auto w-[800px] h-full p-2">
           <div className="bg-white h-full rounded shadow border p-2 flex flex-col">
-            <div className="flex-1 h-0">
+            <div className="flex-1 h-0 mb-2">
               <ScrollArea className="h-full">
                 {messages.map((item) => {
-                  if (item.role === "assistant") {
-                    if (isArray(item.content)) {
-                      if (item.content[0].type === "tool-call") {
-                        return (
-                          <div key={item.id}>{item.content[0].toolName}</div>
-                        );
-                      }
-                    }
-                  }
-
-                  if (item.role === "tool") {
-                    return (
-                      <div key={item.id}>
-                        {item.content[0].result as string}
-                      </div>
-                    );
-                  }
-
-                  return <div key={item.id}>{item.content.toString()}</div>;
+                  return (
+                    <MessageDirection key={item.id} item={item}>
+                      <MessageItem item={item}></MessageItem>
+                    </MessageDirection>
+                  );
                 })}
               </ScrollArea>
             </div>
@@ -66,6 +73,7 @@ const page = () => {
                         ...messages,
                         { id: nanoid(), role: "user", content: input },
                       ];
+                      setMessages(newMessages);
                       setInput("");
                       const result = await chat(
                         newMessages.map((item) => {
@@ -88,8 +96,8 @@ const page = () => {
                           ]);
                         }
                         if (data?.type === "tool-call") {
-                          setMessages([
-                            ...newMessages,
+                          setMessages((messages) => [
+                            ...messages,
                             {
                               id: nanoid(),
                               role: "assistant",
@@ -108,7 +116,7 @@ const page = () => {
                           ]);
                         }
                         if (data?.type === "finish") {
-                          console.log("demo");
+                          save();
                         }
                       }
                     }
