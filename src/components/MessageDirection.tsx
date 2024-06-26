@@ -25,8 +25,8 @@ const MessageDirection = ({
       >
         <div
           className={cn(
-            "w-fit",
-            typeof item.content === "string" && "p-2 bg-gray-100 rounded"
+            "w-fit p-2 rounded",
+            typeof item.content === "string" && "bg-gray-100"
           )}
         >
           {children}

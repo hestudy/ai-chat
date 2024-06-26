@@ -7,12 +7,11 @@ import MessageItem from "@/components/MessageItem";
 import GridPattern from "@/components/ui/magicui/animated-grid-pattern";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
-import { useDebounceFn, useRequest } from "ahooks";
+import { useBoolean, useDebounceFn, useRequest } from "ahooks";
 import { CoreMessage } from "ai";
 import { readStreamableValue } from "ai/rsc";
 import { nanoid } from "nanoid";
 import { useParams } from "next/navigation";
-import { isArray } from "radash";
 import { useState } from "react";
 
 const page = () => {
@@ -21,6 +20,7 @@ const page = () => {
     []
   );
   const { id } = useParams();
+  const [toolLoadingId,setToolLoadingId] = useState<string>()
 
   useRequest(async () => {
     const res = await getMessage({ id: id as string });
@@ -52,7 +52,10 @@ const page = () => {
                 {messages.map((item) => {
                   return (
                     <MessageDirection key={item.id} item={item}>
-                      <MessageItem item={item}></MessageItem>
+                      <MessageItem
+                        item={item}
+                        toolLoadingId={toolLoadingId}
+                      ></MessageItem>
                     </MessageDirection>
                   );
                 })}
@@ -96,6 +99,7 @@ const page = () => {
                           ]);
                         }
                         if (data?.type === "tool-call") {
+                          setToolLoadingId(data.toolCallId)
                           setMessages((messages) => [
                             ...messages,
                             {
@@ -106,6 +110,7 @@ const page = () => {
                           ]);
                         }
                         if (data?.type === "tool-result") {
+                          setToolLoadingId(undefined)
                           setMessages((messages) => [
                             ...messages,
                             {
@@ -115,9 +120,7 @@ const page = () => {
                             },
                           ]);
                         }
-                        if (data?.type === "finish") {
-                          save();
-                        }
+                        save();
                       }
                     }
                   }
