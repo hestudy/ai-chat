@@ -5,6 +5,7 @@ import { Inter as FontSans } from "next/font/google";
 // Supports weights 100-900
 import "@fontsource-variable/noto-sans-sc";
 import "./globals.css";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -27,7 +28,7 @@ export default async function RootLayout({
         className={cn("h-screen bg-background antialiased", fontSans.variable)}
       >
         <Toaster />
-        {children}
+        <TooltipProvider> {children}</TooltipProvider>
       </body>
     </html>
   );

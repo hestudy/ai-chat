@@ -9,15 +9,21 @@ import GridPattern from "@/components/ui/magicui/animated-grid-pattern";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useDebounceFn, useRequest } from "ahooks";
 import { CoreMessage } from "ai";
 import { readStreamableValue } from "ai/rsc";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, Plus } from "lucide-react";
 import { nanoid } from "nanoid";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 const page = () => {
+  const router = useRouter();
   const [input, setInput] = useState<string>();
   const [messages, setMessages] = useState<(CoreMessage & { id: string })[]>(
     []
@@ -185,7 +191,19 @@ const page = () => {
                   <div className="flex space-x-2">
                     <MessageRecord></MessageRecord>
                   </div>
-                  <div></div>
+                  <div className="flex space-x-2">
+                    <Tooltip>
+                      <TooltipTrigger
+                        onClick={() => {
+                          const id = nanoid();
+                          router.replace(`/app/chat/${id}`);
+                        }}
+                      >
+                        <Plus />
+                      </TooltipTrigger>
+                      <TooltipContent>新建会话</TooltipContent>
+                    </Tooltip>
+                  </div>
                 </div>
                 <Separator className="my-2"></Separator>
                 <div className="flex-1 h-0 mb-2">

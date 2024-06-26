@@ -2,6 +2,7 @@
 
 import { validateRequest } from "@/auth";
 import { db } from "@/db";
+import { IdData, idSchema } from "@/schemas/idSchema";
 import {
   GetMessageData,
   SaveMessageData,
@@ -27,13 +28,13 @@ export const saveMessage = async (data: SaveMessageData) => {
     };
   }
 
-  const count = await db.message.count({
-    where: {
-      id: data.id,
-    },
-  });
-
-  const isExist = count > 0;
+  const isExist = Boolean(
+    await db.message.count({
+      where: {
+        id: data.id,
+      },
+    })
+  );
 
   if (isExist) {
     const res = await db.message.update({
@@ -51,6 +52,8 @@ export const saveMessage = async (data: SaveMessageData) => {
       },
     };
   }
+
+  const count = await db.message.count();
 
   const res = await db.message.create({
     data: {
@@ -97,6 +100,39 @@ export const getMessage = async (data: GetMessageData) => {
   return {
     success: true,
     data: res,
+  };
+};
+
+export const deleteMessage = async (data: IdData) => {
+  "use server";
+  const auth = await validateRequest();
+  if (!auth.user) {
+    return {
+      success: false,
+      error: "请先登录",
+    };
+  }
+
+  const validate = idSchema.safeParse(data);
+  if (!validate.success) {
+    return {
+      success: false,
+      error: validate.error.errors[0].message,
+    };
+  }
+
+  const res = await db.message.delete({
+    where: {
+      id: data.id,
+      userId: auth.user?.id!,
+    },
+  });
+
+  return {
+    success: true,
+    data: {
+      id: res.id,
+    },
   };
 };
 
