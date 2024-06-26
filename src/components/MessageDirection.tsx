@@ -19,13 +19,13 @@ const MessageDirection = ({
       </div>
       <div
         className={cn(
-          "flex-1 w-0 shrink-0",
+          "flex-1 w-0 shrink-0 mr-12",
           item.role === "user" && "flex justify-end mr-2"
         )}
       >
         <div
           className={cn(
-            "w-fit p-2 rounded",
+            "w-fit p-2 rounded max-w-full",
             typeof item.content === "string" && "bg-gray-100"
           )}
         >

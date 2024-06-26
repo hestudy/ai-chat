@@ -2,6 +2,8 @@ import { Toaster } from "@/components/ui/sonner";
 import { cn } from "@/lib/utils";
 import type { Metadata } from "next";
 import { Inter as FontSans } from "next/font/google";
+// Supports weights 100-900
+import "@fontsource-variable/noto-sans-sc";
 import "./globals.css";
 
 const fontSans = FontSans({
@@ -22,10 +24,7 @@ export default async function RootLayout({
   return (
     <html lang="en">
       <body
-        className={cn(
-          "h-screen bg-background font-sans antialiased",
-          fontSans.variable
-        )}
+        className={cn("h-screen bg-background antialiased", fontSans.variable)}
       >
         <Toaster />
         {children}

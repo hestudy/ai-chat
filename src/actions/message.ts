@@ -27,13 +27,13 @@ export const saveMessage = async (data: SaveMessageData) => {
     };
   }
 
-  const isExist = Boolean(
-    await db.message.count({
-      where: {
-        id: data.id,
-      },
-    })
-  );
+  const count = await db.message.count({
+    where: {
+      id: data.id,
+    },
+  });
+
+  const isExist = count > 0;
 
   if (isExist) {
     const res = await db.message.update({
@@ -57,6 +57,7 @@ export const saveMessage = async (data: SaveMessageData) => {
       id: data.id,
       content: data.content,
       userId: auth.user?.id!,
+      title: `新会话${count + 1}`,
     },
   });
 
@@ -89,6 +90,28 @@ export const getMessage = async (data: GetMessageData) => {
   const res = await db.message.findFirst({
     where: {
       id: data.id,
+      userId: auth.user?.id!,
+    },
+  });
+
+  return {
+    success: true,
+    data: res,
+  };
+};
+
+export const getAllMessage = async () => {
+  "use server";
+  const auth = await validateRequest();
+  if (!auth.user) {
+    return {
+      success: false,
+      error: "请先登录",
+    };
+  }
+
+  const res = await db.message.findMany({
+    where: {
       userId: auth.user?.id!,
     },
   });

@@ -1,6 +1,9 @@
 import { tool } from "ai";
-import { z } from "zod";
+import fs, { existsSync, mkdirSync } from "fs";
+import { nanoid } from "nanoid";
 import Openai from "openai";
+import path from "path";
+import { z } from "zod";
 
 const openai = new Openai({
   apiKey: process.env.OPENAI_API_KEY,
@@ -20,10 +23,27 @@ export const dalle = tool({
         size: "1024x1024",
         prompt,
       });
-      return {
-        success: true,
-        data: res?.data?.[0],
-      };
+      const data = res?.data?.[0];
+      const url = data?.url;
+      if (url) {
+        const blob = await fetch(url).then((res) => res.blob());
+        const id = nanoid();
+        const dirPath = path.join(process.cwd(), "prisma", "data", "images");
+        if (!existsSync(dirPath)) {
+          mkdirSync(dirPath, { recursive: true });
+        }
+        const filePath = path.join(dirPath, `${id}.png`);
+        const arrayBuffer = await blob.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        fs.writeFileSync(filePath, buffer);
+        return {
+          success: true,
+          data: {
+            url: `/api/image/${id}.png`,
+            prompt: data.revised_prompt,
+          },
+        };
+      }
     } catch (e) {
       return {
         success: false,

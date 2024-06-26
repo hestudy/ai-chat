@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { IdData, idSchema } from "./idSchema";
 
 export const saveMessageSchema = z.object({
   id: z.string().min(1, { message: "id不能为空" }),
@@ -7,8 +8,6 @@ export const saveMessageSchema = z.object({
 
 export type SaveMessageData = z.infer<typeof saveMessageSchema>;
 
-export const getMessageSchema = z.object({
-  id: z.string().min(1, { message: "id不能为空" }),
-});
+export const getMessageSchema = idSchema;
 
-export type GetMessageData = z.infer<typeof getMessageSchema>;
+export type GetMessageData = IdData;
