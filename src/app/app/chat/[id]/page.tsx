@@ -5,6 +5,7 @@ import { getMessage, saveMessage } from "@/actions/message";
 import MessageDirection from "@/components/MessageDirection";
 import MessageItem from "@/components/MessageItem";
 import MessageRecord from "@/components/MessageRecord";
+import { Button } from "@/components/ui/button";
 import GridPattern from "@/components/ui/magicui/animated-grid-pattern";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Separator } from "@/components/ui/separator";
@@ -17,7 +18,7 @@ import {
 import { useDebounceFn, useRequest } from "ahooks";
 import { CoreMessage } from "ai";
 import { readStreamableValue } from "ai/rsc";
-import { LoaderCircle, Plus } from "lucide-react";
+import { LoaderCircle, Plus, Send } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
@@ -66,8 +67,12 @@ const page = () => {
     }
   );
 
-  const { run: send } = useRequest(
+  const { run: send, loading: sendLoading } = useRequest(
     async (isSystem: boolean = false) => {
+      if (!input) {
+        toast.warning("请输入内容");
+        return;
+      }
       let newMessages = messages;
       if (!isSystem) {
         newMessages = [
@@ -144,7 +149,7 @@ const page = () => {
     <div className="h-full mx-auto relative">
       <GridPattern className="z-1"></GridPattern>
       <div className="absolute z-2 w-full h-full">
-        <div className="mx-auto w-[800px] h-full p-2">
+        <div className="mx-auto w-full xl:w-[800px] h-full p-2">
           <div className="bg-white h-full rounded shadow border p-2 flex flex-col">
             {loading && (
               <div className="h-full flex justify-center items-center">
@@ -195,22 +200,36 @@ const page = () => {
                     })}
                   </ScrollArea>
                 </div>
-                <div>
-                  <Textarea
-                    value={input}
-                    onChange={(e) => {
-                      setInput(e.target.value);
-                    }}
-                    placeholder="嘿，来聊点什么"
-                    onKeyDown={async (e) => {
-                      if (e.ctrlKey && e.key === "Enter") {
-                        if (input) {
+                <div className="flex">
+                  <div className="flex-1 w-0">
+                    <Textarea
+                      disabled={sendLoading}
+                      value={input}
+                      onChange={(e) => {
+                        setInput(e.target.value);
+                      }}
+                      placeholder="嘿，来聊点什么"
+                      onKeyDown={async (e) => {
+                        if (e.ctrlKey && e.key === "Enter") {
                           e.preventDefault();
                           send();
                         }
-                      }
-                    }}
-                  ></Textarea>
+                      }}
+                    ></Textarea>
+                  </div>
+                  <div className="flex ml-2 justify-center items-center">
+                    <Button
+                      onClick={() => {
+                        send();
+                      }}
+                      disabled={sendLoading}
+                    >
+                      {!sendLoading && <Send className="size-4" />}
+                      {sendLoading && (
+                        <LoaderCircle className="size-4 animate-spin" />
+                      )}
+                    </Button>
+                  </div>
                 </div>
               </>
             )}

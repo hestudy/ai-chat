@@ -1,3 +1,5 @@
+"use client";
+
 import { CoreMessage } from "ai";
 import copy from "clipboard-copy";
 import { Clipboard, LoaderCircle } from "lucide-react";
