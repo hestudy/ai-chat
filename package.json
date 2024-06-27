@@ -7,8 +7,10 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "migrate": "npx prisma migrate dev --name init && prisma generate",
-    "migrate:prod": "npx prisma migrate deploy && prisma generate",
+    "generate": "prisma generate",
+    "migrate": "npm run migrate:dev && npm run generate",
+    "migrate:dev": "npx prisma migrate dev --name init",
+    "migrate:prod": "npx prisma migrate deploy",
     "studio": "npx prisma studio"
   },
   "dependencies": {
