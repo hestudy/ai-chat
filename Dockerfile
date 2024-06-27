@@ -5,14 +5,8 @@ RUN corepack enable
 RUN apt-get update -y && apt-get install -y openssl
 COPY . /app
 WORKDIR /app
-
-FROM base AS build
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
-RUN pnpm run build
-
-FROM base
-COPY --from=build /app/node_modules /app/node_modules
-COPY --from=build /app/.next /app/.next
 RUN pnpm run migrate
+RUN pnpm run build
 EXPOSE 3000
 CMD [ "npm", "run", "start" ]
