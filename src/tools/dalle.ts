@@ -1,3 +1,4 @@
+import { toolFactory } from "@/lib/toolFactory";
 import { tool } from "ai";
 import fs, { existsSync, mkdirSync } from "fs";
 import { nanoid } from "nanoid";
@@ -10,45 +11,48 @@ const openai = new Openai({
   baseURL: process.env.OPENAI_API_BASE_URL,
 });
 
-export const dalle = tool({
-  description: "使用dalle进行绘画",
-  parameters: z.object({
-    prompt: z.string(),
-  }),
-  execute: async ({ prompt }) => {
-    try {
-      const res = await openai.images.generate({
-        model: "dall-e-3",
-        n: 1,
-        size: "1024x1024",
-        prompt,
-      });
-      const data = res?.data?.[0];
-      const url = data?.url;
-      if (url) {
-        const blob = await fetch(url).then((res) => res.blob());
-        const id = nanoid();
-        const dirPath = path.join(process.cwd(), "prisma", "data", "images");
-        if (!existsSync(dirPath)) {
-          mkdirSync(dirPath, { recursive: true });
+export const dalle = toolFactory({
+  reply: false,
+  tool: tool({
+    description: "使用dalle进行绘画",
+    parameters: z.object({
+      prompt: z.string(),
+    }),
+    execute: async ({ prompt }) => {
+      try {
+        const res = await openai.images.generate({
+          model: "dall-e-3",
+          n: 1,
+          size: "1024x1024",
+          prompt,
+        });
+        const data = res?.data?.[0];
+        const url = data?.url;
+        if (url) {
+          const blob = await fetch(url).then((res) => res.blob());
+          const id = nanoid();
+          const dirPath = path.join(process.cwd(), "prisma", "data", "images");
+          if (!existsSync(dirPath)) {
+            mkdirSync(dirPath, { recursive: true });
+          }
+          const filePath = path.join(dirPath, `${id}.png`);
+          const arrayBuffer = await blob.arrayBuffer();
+          const buffer = Buffer.from(arrayBuffer);
+          fs.writeFileSync(filePath, buffer);
+          return {
+            success: true,
+            data: {
+              url: `/api/image/${id}.png`,
+              prompt: data.revised_prompt,
+            },
+          };
         }
-        const filePath = path.join(dirPath, `${id}.png`);
-        const arrayBuffer = await blob.arrayBuffer();
-        const buffer = Buffer.from(arrayBuffer);
-        fs.writeFileSync(filePath, buffer);
+      } catch (e) {
         return {
-          success: true,
-          data: {
-            url: `/api/image/${id}.png`,
-            prompt: data.revised_prompt,
-          },
+          success: false,
+          error: (e as Error)?.message,
         };
       }
-    } catch (e) {
-      return {
-        success: false,
-        error: (e as Error)?.message,
-      };
-    }
-  },
+    },
+  }),
 });

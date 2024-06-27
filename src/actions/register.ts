@@ -10,6 +10,13 @@ import { cookies } from "next/headers";
 export const register = async (data: RegisterData) => {
   "use server";
 
+  if (process.env.AUTH_REGISTER !== "true") {
+    return {
+      success: false,
+      error: "注册功能已关闭",
+    };
+  }
+
   const validate = await registerSchema.safeParseAsync(data);
   if (!validate.success) {
     return {
