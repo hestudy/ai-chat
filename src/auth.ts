@@ -15,6 +15,7 @@ export const lucia = new Lucia(adapter, {
     attributes: {
       secure: Boolean(process.env.COOKIE_SECURE),
       sameSite: (process.env.COOKIE_SAMESITE as any) || "strict",
+      domain: process.env.COOKIE_DOMAIN || process.env.DOMAIN,
     },
   },
   getUserAttributes: (attributes) => {
