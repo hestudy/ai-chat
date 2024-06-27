@@ -8,12 +8,11 @@ WORKDIR /app
 
 FROM base AS build
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
-RUN pnpm run migrate
 RUN pnpm run build
 
 FROM base
 COPY --from=build /app/node_modules /app/node_modules
-COPY --from=build /app/prisma /app/prisma
 COPY --from=build /app/.next /app/.next
+RUN pnpm run migrate
 EXPOSE 3000
 CMD [ "npm", "run", "start" ]
