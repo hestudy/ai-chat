@@ -1,6 +1,7 @@
 import { CoreMessage } from "ai";
 import copy from "clipboard-copy";
 import { Clipboard, LoaderCircle } from "lucide-react";
+import dynamic from "next/dynamic";
 import { isArray } from "radash";
 import MarkDown from "react-markdown";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
@@ -12,7 +13,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "./ui/collapsible";
-import dynamic from "next/dynamic";
 
 const ReactJson = dynamic(() => import("react-json-view"), { ssr: false });
 
@@ -39,15 +39,34 @@ const MessageItem = ({
   }
 
   if (item.role === "tool") {
+    const data = item.content[0];
+    const result = data.result as { success: boolean; [key: string]: any };
+
     return (
-      <Collapsible>
-        <CollapsibleTrigger>
-          <Badge variant={"outline"}>查看运行结果</Badge>
-        </CollapsibleTrigger>
-        <CollapsibleContent className="bg-gray-100 p-2 rounded mt-2">
-          <ReactJson src={item.content[0].result as any}></ReactJson>
-        </CollapsibleContent>
-      </Collapsible>
+      <div>
+        <Collapsible>
+          <CollapsibleTrigger>
+            <Badge variant={"outline"}>查看运行结果</Badge>
+          </CollapsibleTrigger>
+          <CollapsibleContent className="bg-gray-100 p-2 rounded mt-2">
+            <ReactJson src={item.content[0].result as any}></ReactJson>
+          </CollapsibleContent>
+        </Collapsible>
+        {data.toolName === "dalle" && (
+          <>
+            {result.success && (
+              <img
+                src={result.data.url}
+                alt={result.data.prompt}
+                className="mt-2 rounded"
+              ></img>
+            )}
+            {!result.success && (
+              <Badge variant={"destructive"}>{result.data.error}</Badge>
+            )}
+          </>
+        )}
+      </div>
     );
   }
 

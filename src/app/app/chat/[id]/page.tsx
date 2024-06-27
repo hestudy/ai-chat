@@ -1,6 +1,6 @@
 "use client";
 
-import { chat } from "@/actions/chat";
+import { chat, getTools } from "@/actions/chat";
 import { getMessage, saveMessage } from "@/actions/message";
 import MessageDirection from "@/components/MessageDirection";
 import MessageItem from "@/components/MessageItem";
@@ -21,6 +21,7 @@ import { LoaderCircle, Plus } from "lucide-react";
 import { nanoid } from "nanoid";
 import { useParams, useRouter } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
+import { toast } from "sonner";
 
 const page = () => {
   const router = useRouter();
@@ -65,72 +66,27 @@ const page = () => {
     }
   );
 
-  const { run: sendSystem } = useRequest(
-    async () => {
-      const result = await chat(
-        messages.map((item) => {
-          const { id, ...props } = item;
-          return props;
-        })
-      );
-      let content = "";
-      for await (const data of readStreamableValue(result.content)) {
-        if (data?.type === "text-delta") {
-          setMessages([
-            ...messages,
-            {
-              id: nanoid(),
-              role: "assistant",
-              content: (content += data.textDelta),
-            },
-          ]);
-        }
-        if (data?.type === "tool-call") {
-          setToolLoadingId(data.toolCallId);
-          setMessages((messages) => [
-            ...messages,
-            {
-              id: nanoid(),
-              role: "assistant",
-              content: [data],
-            },
-          ]);
-        }
-        if (data?.type === "tool-result") {
-          setToolLoadingId(undefined);
-          setMessages((messages) => [
-            ...messages,
-            {
-              id: nanoid(),
-              role: "tool",
-              content: [data],
-            },
-          ]);
-          sendSystem();
-        }
-        save();
-      }
-    },
-    {
-      manual: true,
-      debounceWait: 300,
-    }
-  );
-
   const { run: send } = useRequest(
-    async () => {
-      const newMessages: typeof messages = [
-        ...messages,
-        { id: nanoid(), role: "user", content: input! },
-      ];
-      setMessages(newMessages);
-      setInput("");
+    async (isSystem: boolean = false) => {
+      let newMessages = messages;
+      if (!isSystem) {
+        newMessages = [
+          ...messages,
+          { id: nanoid(), role: "user", content: input! },
+        ];
+        setMessages(newMessages);
+        setInput("");
+      }
       const result = await chat(
         newMessages.map((item) => {
           const { id, ...props } = item;
           return props;
         })
       );
+      if (!result?.content) {
+        toast.error("请求失败，请稍后再试");
+        return;
+      }
       let content = "";
       for await (const data of readStreamableValue(result.content)) {
         if (data?.type === "text-delta") {
@@ -142,6 +98,7 @@ const page = () => {
               content: (content += data.textDelta),
             },
           ]);
+          save();
         }
         if (data?.type === "tool-call") {
           setToolLoadingId(data.toolCallId);
@@ -154,6 +111,7 @@ const page = () => {
             },
           ]);
         }
+        // @ts-ignore
         if (data?.type === "tool-result") {
           setToolLoadingId(undefined);
           setMessages((messages) => [
@@ -164,9 +122,17 @@ const page = () => {
               content: [data],
             },
           ]);
-          sendSystem();
+          save();
+
+          const tools = await getTools();
+          console.log(tools);
+          console.log(data);
+          // @ts-ignore
+          const tool = tools.find((d) => d.name === data.toolName);
+          if (tool?.reply) {
+            send(true);
+          }
         }
-        save();
       }
     },
     {
