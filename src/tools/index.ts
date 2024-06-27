@@ -5,3 +5,8 @@ export const tools = {
   getRandomNumber: getRandomNumber.tool,
   dalle: dalle.tool,
 };
+
+export const allTools = {
+  getRandomNumber,
+  dalle,
+};

@@ -1,6 +1,6 @@
 "use server";
 
-import { tools } from "@/tools";
+import { allTools, tools } from "@/tools";
 import { createOpenAI } from "@ai-sdk/openai";
 import { CoreMessage, streamText } from "ai";
 import { createStreamableValue } from "ai/rsc";
@@ -27,4 +27,12 @@ export const chat = async (messages: CoreMessage[]) => {
   } catch (e) {
     console.log(e);
   }
+};
+
+export const getTools = async () => {
+  return Object.keys(allTools).map((toolName) => ({
+    name: toolName,
+    // @ts-ignore
+    reply: allTools[toolName].reply,
+  }));
 };

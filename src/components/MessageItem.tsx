@@ -54,9 +54,15 @@ const MessageItem = ({
         </Collapsible>
         {data.toolName === "dalle" && (
           <>
-            {result.success && <img src={result.url} alt={result.prompt}></img>}
+            {result.success && (
+              <img
+                src={result.data.url}
+                alt={result.data.prompt}
+                className="mt-2 rounded"
+              ></img>
+            )}
             {!result.success && (
-              <Badge variant={"destructive"}>{result.error}</Badge>
+              <Badge variant={"destructive"}>{result.data.error}</Badge>
             )}
           </>
         )}

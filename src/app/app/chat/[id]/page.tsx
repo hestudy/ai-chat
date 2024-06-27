@@ -1,6 +1,6 @@
 "use client";
 
-import { chat } from "@/actions/chat";
+import { chat, getTools } from "@/actions/chat";
 import { getMessage, saveMessage } from "@/actions/message";
 import MessageDirection from "@/components/MessageDirection";
 import MessageItem from "@/components/MessageItem";
@@ -14,7 +14,6 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { tools } from "@/tools";
 import { useDebounceFn, useRequest } from "ahooks";
 import { CoreMessage } from "ai";
 import { readStreamableValue } from "ai/rsc";
@@ -124,8 +123,13 @@ const page = () => {
             },
           ]);
           save();
+
+          const tools = await getTools();
+          console.log(tools);
+          console.log(data);
           // @ts-ignore
-          if (tools[data.toolName]?.reply) {
+          const tool = tools.find((d) => d.name === data.toolName);
+          if (tool?.reply) {
             send(true);
           }
         }
