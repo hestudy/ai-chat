@@ -6,16 +6,13 @@ RUN apt-get update -y && apt-get install -y openssl
 COPY . /app
 WORKDIR /app
 
-FROM base AS prod-deps
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
-
 FROM base AS build
-RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
 RUN pnpm run migrate
 RUN pnpm run build
 
 FROM base
-COPY --from=prod-deps /app/node_modules /app/node_modules
+COPY --from=build /app/node_modules /app/node_modules
 COPY --from=build /app/prisma /app/prisma
 COPY --from=build /app/.next /app/.next
 EXPOSE 3000
