@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "next lint",
     "migrate": "npx prisma migrate dev --name init && prisma generate",
-    "migrate:prod": "npx prisma migrate deploy --name init && prisma generate",
+    "migrate:prod": "npx prisma migrate deploy && prisma generate",
     "studio": "npx prisma studio"
   },
   "dependencies": {
