@@ -7,6 +7,7 @@ WORKDIR /app
 
 FROM base AS prod-deps
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --prod --frozen-lockfile
+RUN pnpm run migrate
 
 FROM base AS build
 RUN --mount=type=cache,id=pnpm,target=/pnpm/store pnpm install --frozen-lockfile
@@ -14,6 +15,7 @@ RUN pnpm run build
 
 FROM base
 COPY --from=prod-deps /app/node_modules /app/node_modules
+COPY --from=prod-deps /app/prisma /app/prisma
 COPY --from=build /app/.next /app/.next
 EXPOSE 3000
 CMD [ "npm", "run", "start" ]
