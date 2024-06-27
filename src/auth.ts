@@ -1,9 +1,8 @@
 import { PrismaAdapter } from "@lucia-auth/adapter-prisma";
-import { Lucia, TimeSpan, User } from "lucia";
-import { db } from "./db";
-import { Session } from "lucia";
+import { Lucia, Session, TimeSpan, User } from "lucia";
 import { cookies } from "next/headers";
 import { cache } from "react";
+import { db } from "./db";
 
 const adapter = new PrismaAdapter(db.session, db.user);
 
@@ -13,9 +12,9 @@ export const lucia = new Lucia(adapter, {
     name: "session",
     expires: true,
     attributes: {
-      secure: Boolean(process.env.COOKIE_SECURE),
-      sameSite: (process.env.COOKIE_SAMESITE as any) || "strict",
-      domain: process.env.COOKIE_DOMAIN || process.env.DOMAIN,
+      secure: process.env.COOKIE_SECURE === "true",
+      sameSite: "strict",
+      domain: process.env.DOMAIN,
     },
   },
   getUserAttributes: (attributes) => {
