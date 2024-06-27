@@ -1,4 +1,4 @@
-import { PrismaClient } from "@prisma/client/edge";
+import { PrismaClient } from "@prisma/client";
 
 const instance = (() => {
   let instance: ReturnType<typeof createInstance> | null = null;
